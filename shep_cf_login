@@ -1,0 +1,31 @@
+#!/bin/bash
+
+source $HOME/bin/shep_env
+
+# LEASE_OUTPUT_JSON=$(shepherd get lease --namespace ${SH_NS:-original} ${SH_ID:---last-lease} --json | jq -r '.output')
+#
+# eval "$(smith bosh -l <(echo ${LEASE_OUTPUT_JSON}))"
+#
+# jq '.ops_manager' <(echo ${LEASE_OUTPUT_JSON})
+#
+
+
+UAA_ADMIN_PASSWORD=$(credhub get -n "/opsmgr/$(bosh deployments --json | jq -r '.Tables[].Rows[].name')/uaa/admin_credentials" --output-json | jq -r '.value.password')
+
+echo "https://tas-portal.${TAS_URL_APPS}"
+echo "https://tas-portal.${TAS_URL_SYS}"
+echo "https://apps.${TAS_NAME}.cf-app.com"
+echo -e "login: admin\npassword: ${UAA_ADMIN_PASSWORD}"
+
+cf login -a "api.${SYS_DOMAIN:?}" -u "admin" -p "${UAA_ADMIN_PASSWORD:?}" --skip-ssl-validation
+
+#open -n -a "Brave Browser" --args "--new-window" "${TAS_URL_OPSMAN}" "tas-portal.${TAS_URL_APPS}" "tas-portal.${TAS_URL_SYS}"
+
+
+
+# prods="$(om -t https://pcf.${TAS_NAME:?}.cf-app.com -k -u pivotalcf -p enp9xgw11e6n1kec curl -s -p /api/v0/staged/products)"
+# guid="$(echo "$prods" | jq -r '.[] | select(.type == "cf") | .guid')"
+# creds="$(om -t https://pcf.${TAS_NAME:?}.cf-app.com -k -u pivotalcf -p enp9xgw11e6n1kec curl -s -p /api/v0/deployed/products/"$guid"/credentials/.uaa.admin_credentials)"
+# user="$(echo "$creds" | jq -r .credential.value.identity)"
+# pass="$(echo "$creds" | jq -r .credential.value.password)"
+# cf login -a "api.sys.${TAS_NAME:?}.cf-app.com" -u "$user" -p "$pass" --skip-ssl-validation
